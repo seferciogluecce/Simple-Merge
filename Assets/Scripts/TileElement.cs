@@ -11,7 +11,7 @@ public class TileElement : MonoBehaviour
     TileSpriteManager TSM;
     Stack Sprites;
     GameObject triggered;
-
+    
     // Use this for initialization
     void Awake()
     {
@@ -20,7 +20,7 @@ public class TileElement : MonoBehaviour
     }
     void Update()
     {
-        if (MoveWithMouse)
+        if (MoveWithMouse && GetComponent<SpriteRenderer>().enabled)
         {
             transform.position = new Vector3(Camera.main.ScreenToWorldPoint(Input.mousePosition).x, Camera.main.ScreenToWorldPoint(Input.mousePosition).y, 0);
         }
@@ -34,7 +34,7 @@ public class TileElement : MonoBehaviour
         MoveWithMouse = false;
         if (CollidedWithOther)
         {
-            Merge();
+            OntoOtherOne();
         }
         else
         {
@@ -56,25 +56,21 @@ public class TileElement : MonoBehaviour
             CollidedWithOther = false;
         }
     }
-    void Merge()
+    void OntoOtherOne()
     {
-        if(triggered.GetComponent<TileElement>().Sprites.Count == Sprites.Count && Sprites.Count !=0 && GetComponent<SpriteRenderer>().enabled)
+        if(triggered.GetComponent<TileElement>().Sprites.Count == Sprites.Count && Sprites.Count !=0 )
         {
-            triggered.GetComponent<TileElement>().UpdateTileElementSprite();
-            Hide();
+            Merge();
         }
         else
         {
             Swap();
         }
     }
-    void Swap()
+    void Merge()
     {
-        Transform parent = triggered.transform.parent;
-        triggered.transform.parent = this.transform.parent;
-        this.transform.parent = parent;
-        triggered.GetComponent<TileElement>().BackToParent();
-        BackToParent();
+        triggered.GetComponent<TileElement>().UpdateTileElementSprite();
+        Hide();
     }
     void Hide()
     {
@@ -82,6 +78,14 @@ public class TileElement : MonoBehaviour
         ResetStack();
         Appear(false);
         TM.EmptyTile(this);
+    }    
+    void Swap()
+    {
+        Transform parent = triggered.transform.parent;
+        triggered.transform.parent = this.transform.parent;
+        this.transform.parent = parent;
+        triggered.GetComponent<TileElement>().BackToParent();
+        BackToParent();
     }
     public void Appear(bool enable)
     {
@@ -91,7 +95,7 @@ public class TileElement : MonoBehaviour
             UpdateTileElementSprite();
         }
     }
-    public void UpdateTileElementSprite()
+     void UpdateTileElementSprite()
     {
         GetComponent<SpriteRenderer>().sprite = (Sprite)Sprites.Pop();
     }
@@ -99,12 +103,14 @@ public class TileElement : MonoBehaviour
     {
         ResetStack();
         BackToParent();
+        Appear(false);
+        GetComponent<BoxCollider2D>().size = ((Sprite)Sprites.Peek()).bounds.size;
     }
     void ResetStack()
     {
         Sprites = TSM.GetTileSpritesStack();
     }
-    public void BackToParent()
+    void BackToParent()
     {
         this.transform.position = transform.parent.position;
     }
